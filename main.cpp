@@ -19,39 +19,38 @@ float wilmaHeight = 7; // Wilma (Persona B) starts on the high end, seven feet o
 void *fredSee(void*) { // Fred's Behavior
 
     while(true) {
-        // Go up
+        cout << "Fred Height: " << fredHeight << endl;
         sem_wait(&sem1); // Grab the semaphore for sem1 when allowed, and lock it
             if(fredHeight < 7)
                 fredHeight += 1;
             else if(fredHeight > 1)
                 fredHeight -= 1.5;
         sem_post(&sem2);
-
         sleep(1);
-        cout << "first thread" << endl;
-        pthread_exit(nullptr);
+
+
     }
 
+    pthread_exit(nullptr);
 
 }
 void *wilmaSaw(void*) { // Wilma's Behavior
 
     while(true) {
-        // Go up
+        cout << "Wilma Height: " << wilmaHeight << endl;
         sem_wait(&sem2); // Grab the semaphore for sem1 when allowed, and lock it
 
-        if(fredHeight > 1)
-            fredHeight -= 1;
+        if(wilmaHeight > 1)
+            wilmaHeight -= 1;
         else if(wilmaHeight < 7)
-            fredHeight += 1.5;
+            wilmaHeight += 1.5;
         sem_post(&sem1);
-
         sleep(1);
-        cout << "first thread" << endl;
-        pthread_exit(nullptr);
+
+
     }
 
-
+    pthread_exit(nullptr);
 }
 
 void checkForThreadErrors(int tid) {
