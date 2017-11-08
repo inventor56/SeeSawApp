@@ -5,6 +5,8 @@
 using namespace std;
 
 #define NUM_THREADS 2 // Two threads in this program
+#define MIN_HEIGHT 1 // Minimum height a person can be at
+#define MAX_HEIGHT 7 // Maximum height a person can be at
 
 pthread_t threads[NUM_THREADS];
 
@@ -12,23 +14,32 @@ pthread_t threads[NUM_THREADS];
 sem_t sem1; // Create semaphore sem1
 sem_t sem2; // Create semaphore sem2
 
+int upDown = 0;
+
+// Set the upward velocity of each person
+float fredVelocity = 1;
+float wilmaVelocity = 1.5;
+
 // We'll store the heights for each person here
 float fredHeight = 1; // Fred (Person A) starts on the low end, one foot off the ground
-float wilmaHeight = 7; // Wilma (Persona B) starts on the high end, seven feet off the ground
+float wilmaHeight = 7; // Wilma (Person B) starts on the high end, seven feet off the ground
+
+
+
 
 void *fredSee(void*) { // Fred's Behavior
 
-    while(true) {
-        cout << "Fred Height: " << fredHeight << endl;
-        sem_wait(&sem1); // Grab the semaphore for sem1 when allowed, and lock it
-            if(fredHeight < 7)
-                fredHeight += 1;
-            else if(fredHeight > 1)
-                fredHeight -= 1.5;
+    while(upDown < 9) {
+        sem_wait(&sem1);
+        while(fredHeight < MAX_HEIGHT && wilmaHeight > MIN_HEIGHT) {
+            cout << "Fred Height: " << fredHeight << endl;
+            cout << "Wilma Height: " << wilmaHeight << endl << "\n";
+            fredHeight += fredVelocity;
+            wilmaHeight -= fredVelocity;
+            sleep(1);
+
+        }
         sem_post(&sem2);
-        sleep(1);
-
-
     }
 
     pthread_exit(nullptr);
@@ -36,19 +47,21 @@ void *fredSee(void*) { // Fred's Behavior
 }
 void *wilmaSaw(void*) { // Wilma's Behavior
 
-    while(true) {
-        cout << "Wilma Height: " << wilmaHeight << endl;
-        sem_wait(&sem2); // Grab the semaphore for sem1 when allowed, and lock it
-
-        if(wilmaHeight > 1)
-            wilmaHeight -= 1;
-        else if(wilmaHeight < 7)
+    while(upDown < 10) {
+        sem_wait(&sem2);
+        while(wilmaHeight < MAX_HEIGHT && fredHeight > MIN_HEIGHT) {
+            cout << "Fred Height: " << fredHeight << endl;
+            cout << "Wilma Height: " << wilmaHeight << endl << "\n";
             wilmaHeight += 1.5;
+            fredHeight -= 1.5;
+            sleep(1);
+
+        }
+        upDown++;
+        cout << "Iteration: " << upDown << " Complete\n\n";
         sem_post(&sem1);
-        sleep(1);
-
-
     }
+    cout << "Finished with Fred Height: " << fredHeight << " Wilma Height: " << wilmaHeight <<endl;
 
     pthread_exit(nullptr);
 }
@@ -63,7 +76,7 @@ void checkForThreadErrors(int tid) {
 int main(int argc, char** argv) {
 
     sem_init(&sem1, 1, 1); // Initialize sem1 semaphore, shared between threads, and initialize value to 1
-    sem_init(&sem2, 1, 0); // Initialize sem2 semaphore, shared between threads, and initialize value to 1
+    sem_init(&sem2, 1, 0); // Initialize sem2 semaphore, shared between threads, and initialize value to 0
 
     int tid;
 
