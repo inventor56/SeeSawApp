@@ -16,9 +16,8 @@ sem_t sem2; // Create semaphore sem2
 
 int upDown = 0;
 
-// Set the upward velocity of each person
-float fredVelocity = 1;
-float wilmaVelocity = 1.5;
+// Store velocity
+float velocity;
 
 // We'll store the heights for each person here
 float fredHeight = 1; // Fred (Person A) starts on the low end, one foot off the ground
@@ -34,8 +33,9 @@ void *fredSee(void*) { // Fred's Behavior
         while(fredHeight < MAX_HEIGHT && wilmaHeight > MIN_HEIGHT) {
             cout << "Fred Height: " << fredHeight << endl;
             cout << "Wilma Height: " << wilmaHeight << endl << "\n";
-            fredHeight += fredVelocity;
-            wilmaHeight -= fredVelocity;
+            velocity = 1;
+            fredHeight += velocity;
+            wilmaHeight -= velocity;
             sleep(1);
 
         }
@@ -52,8 +52,9 @@ void *wilmaSaw(void*) { // Wilma's Behavior
         while(wilmaHeight < MAX_HEIGHT && fredHeight > MIN_HEIGHT) {
             cout << "Fred Height: " << fredHeight << endl;
             cout << "Wilma Height: " << wilmaHeight << endl << "\n";
-            wilmaHeight += 1.5;
-            fredHeight -= 1.5;
+            velocity = 1.5;
+            wilmaHeight += velocity;
+            fredHeight -= velocity;
             sleep(1);
 
         }
