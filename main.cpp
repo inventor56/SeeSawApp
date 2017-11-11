@@ -23,17 +23,14 @@ float velocity;
 float fredHeight = 1; // Fred (Person A) starts on the low end, one foot off the ground
 float wilmaHeight = 7; // Wilma (Person B) starts on the high end, seven feet off the ground
 
-
-
-
 void *fredSee(void*) { // Fred's Behavior
 
     while(upDown < 9) {
         sem_wait(&sem1);
+        velocity = 1;
         while(fredHeight < MAX_HEIGHT && wilmaHeight > MIN_HEIGHT) {
             cout << "Fred Height: " << fredHeight << endl;
             cout << "Wilma Height: " << wilmaHeight << endl << "\n";
-            velocity = 1;
             fredHeight += velocity;
             wilmaHeight -= velocity;
             sleep(1);
@@ -49,10 +46,10 @@ void *wilmaSaw(void*) { // Wilma's Behavior
 
     while(upDown < 10) {
         sem_wait(&sem2);
+        velocity = 1.5;
         while(wilmaHeight < MAX_HEIGHT && fredHeight > MIN_HEIGHT) {
             cout << "Fred Height: " << fredHeight << endl;
             cout << "Wilma Height: " << wilmaHeight << endl << "\n";
-            velocity = 1.5;
             wilmaHeight += velocity;
             fredHeight -= velocity;
             sleep(1);
@@ -62,7 +59,6 @@ void *wilmaSaw(void*) { // Wilma's Behavior
         cout << "Iteration: " << upDown << " Complete\n\n";
         sem_post(&sem1);
     }
-    cout << "Finished with Fred Height: " << fredHeight << " Wilma Height: " << wilmaHeight <<endl;
 
     pthread_exit(nullptr);
 }
@@ -96,7 +92,8 @@ int main(int argc, char** argv) {
         pthread_join(thread, nullptr); // Join threads
     }
 
-
+    // Simulation has ended: Final see-saw state printed below
+    cout << "Finished with Fred Height: " << fredHeight << " Wilma Height: " << wilmaHeight <<endl;
 
 
     return 0;
