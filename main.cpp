@@ -16,29 +16,32 @@ sem_t sem2; // Create semaphore sem2
 
 int upDown = 0;
 
+// Fred (Person A) starts on the low end, one foot off the ground
+float fredHeight = 1;
+// Wilma (Person B) starts on the high end, seven feet off the ground
+float wilmaHeight = 7;
+
 // Store velocity
-float velocity;
-
-// We'll store the heights for each person here
-float fredHeight = 1; // Fred (Person A) starts on the low end, one foot off the ground
-float wilmaHeight = 7; // Wilma (Person B) starts on the high end, seven feet off the ground
-
-
-
+static float velocity;
 
 void *fredSee(void*) { // Fred's Behavior
 
+    // We also start with a velocity of 1
+    velocity = 1;
+
     while(upDown < 9) {
         sem_wait(&sem1);
-        while(fredHeight < MAX_HEIGHT && wilmaHeight > MIN_HEIGHT) {
-            cout << "Fred Height: " << fredHeight << endl;
-            cout << "Wilma Height: " << wilmaHeight << endl << "\n";
+        cout << "Fred Height: " << fredHeight << endl;
+        cout << "Wilma Height: " << wilmaHeight << endl;
+
+        fredHeight += velocity;
+
+        if(fredHeight > 1)
             velocity = 1;
-            fredHeight += velocity;
-            wilmaHeight -= velocity;
-            sleep(1);
+        else if (wilmaHeight == 7) {
 
         }
+
         sem_post(&sem2);
     }
 
@@ -49,20 +52,18 @@ void *wilmaSaw(void*) { // Wilma's Behavior
 
     while(upDown < 10) {
         sem_wait(&sem2);
-        while(wilmaHeight < MAX_HEIGHT && fredHeight > MIN_HEIGHT) {
-            cout << "Fred Height: " << fredHeight << endl;
-            cout << "Wilma Height: " << wilmaHeight << endl << "\n";
-            velocity = 1.5;
-            wilmaHeight += velocity;
-            fredHeight -= velocity;
-            sleep(1);
+        cout << "Wilma Height: " << wilmaHeight << endl;
 
-        }
-        upDown++;
-        cout << "Iteration: " << upDown << " Complete\n\n";
+        wilmaHeight -= velocity;
+
+        if(wilmaHeight == 1)
+            velocity = -1.5;
+
+
+        sleep(1);
+
         sem_post(&sem1);
     }
-    cout << "Finished with Fred Height: " << fredHeight << " Wilma Height: " << wilmaHeight <<endl;
 
     pthread_exit(nullptr);
 }
