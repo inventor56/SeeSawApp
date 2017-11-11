@@ -11,59 +11,59 @@ using namespace std;
 pthread_t threads[NUM_THREADS];
 
 // First, we list our two sempahores
-sem_t sem1; // Create semaphore sem1
-sem_t sem2; // Create semaphore sem2
+sem_t fredBehavior; // Create semaphore fredBehavior
+sem_t wilmaBehavior; // Create semaphore wilmaBehavior
 
 int upDown = 0;
 
-// Store velocity
+// Store velocity, will change depending on which person is "kicking off" (i.e Fred is at 1 ft/sec, Wilma is at 1.5 ft/sec)
 float velocity;
 
 // We'll store the heights for each person here
 float fredHeight = 1; // Fred (Person A) starts on the low end, one foot off the ground
 float wilmaHeight = 7; // Wilma (Person B) starts on the high end, seven feet off the ground
 
-void *fredSee(void*) { // Fred's Behavior
+void *fredSee(void*) { // Fred's Behavior: Thread simulates what happens when Fred is moving upwards, and Wilma is moving downwards
 
-    while(upDown < 9) {
-        sem_wait(&sem1);
-        velocity = 1;
-        while(fredHeight < MAX_HEIGHT && wilmaHeight > MIN_HEIGHT) {
-            cout << "Fred Height: " << fredHeight << endl;
-            cout << "Wilma Height: " << wilmaHeight << endl << "\n";
-            fredHeight += velocity;
-            wilmaHeight -= velocity;
-            sleep(1);
+    while(upDown < 9) { // Ensures that the simulation only runs 10 times ( up and down)
+        sem_wait(&fredBehavior); // !!! KEY ASPECT !!!! - Semaphore ensures Fred will not push up unless Wilma has finished her behavior.
+        velocity = 1; // Since this thread concerns Fred's behavior, his velocity is set to 1 ft/sec
+        while(fredHeight < MAX_HEIGHT && wilmaHeight > MIN_HEIGHT) { // Fred pushes up while his height is not at 7 ft, and while Wilma's height is at 1 ft
+            cout << "Fred Height: " << fredHeight << endl; // Print out Fred's current height
+            cout << "Wilma Height: " << wilmaHeight << endl << "\n"; // Print out Wilma's current height
+            fredHeight += velocity; // Fred's height increases by the current velocity (1)
+            wilmaHeight -= velocity; // Wilma's height decreases by the current velocity (1)
+            sleep(1); // Thread will be throttled by 1 second (for terminal output)
 
         }
-        sem_post(&sem2);
+        sem_post(&wilmaBehavior); // Signal Wilma to begin her behavior (Fred has returned to within 1 ft of the ground)
     }
 
-    pthread_exit(nullptr);
+    pthread_exit(nullptr); // Exit thread at end of simulation
 
 }
 void *wilmaSaw(void*) { // Wilma's Behavior
 
-    while(upDown < 10) {
-        sem_wait(&sem2);
-        velocity = 1.5;
-        while(wilmaHeight < MAX_HEIGHT && fredHeight > MIN_HEIGHT) {
-            cout << "Fred Height: " << fredHeight << endl;
-            cout << "Wilma Height: " << wilmaHeight << endl << "\n";
-            wilmaHeight += velocity;
-            fredHeight -= velocity;
-            sleep(1);
+    while(upDown < 10) { // Wilma's Behavior: Thread simulates what happens when Wilma is moving upwards, and Fred is moving downwards
+        sem_wait(&wilmaBehavior); // !!! KEY ASPECT !!!! - Semaphore ensures Wilma will not push up unless Fred has finished his behavior.
+        velocity = 1.5; // Since this thread concerns Wilma's behavior, her velocity is set to 1.5 ft/sec
+        while(wilmaHeight < MAX_HEIGHT && fredHeight > MIN_HEIGHT) { // Wilma pushes up while her height is not at 7 ft, and while Fred's height is at 1 ft
+            cout << "Fred Height: " << fredHeight << endl; // Print out Fred's current height
+            cout << "Wilma Height: " << wilmaHeight << endl << "\n"; //Print out Wilma's current height
+            wilmaHeight += velocity; // Wilma's height increases by the current velocity (1.5)
+            fredHeight -= velocity;  // Fred's height decreases by the current velocity (1.5)
+            sleep(1); // Thread will be throttled by 1 second (for terminal output)
 
         }
-        upDown++;
-        cout << "Iteration: " << upDown << " Complete\n\n";
-        sem_post(&sem1);
+        upDown++; // Since Fred starts the simulation, once Wilma comes down a full up-down has been been performed. Increment by 1
+        cout << "Iteration: " << upDown << " Complete\n\n"; // Print out the current iteration for user readability
+        sem_post(&fredBehavior); // Signal Fred to begin his behavior (Wilma has returned to within 1 ft of the ground)
     }
 
-    pthread_exit(nullptr);
+    pthread_exit(nullptr); // Exit thread at end of simulation
 }
 
-void checkForThreadErrors(int tid) {
+void checkForThreadErrors(int tid) { // Error checking thread to ensure threads were created successfully
     if (tid) {
         cout << "Error: Problem creating thread," << tid << endl;
         exit(-1);
@@ -72,8 +72,8 @@ void checkForThreadErrors(int tid) {
 
 int main(int argc, char** argv) {
 
-    sem_init(&sem1, 1, 1); // Initialize sem1 semaphore, shared between threads, and initialize value to 1
-    sem_init(&sem2, 1, 0); // Initialize sem2 semaphore, shared between threads, and initialize value to 0
+    sem_init(&fredBehavior, 1, 1); // Initialize fredBehavior semaphore, shared between threads, and initialize value to 1
+    sem_init(&wilmaBehavior, 1, 0); // Initialize wilmaBehavior semaphore, shared between threads, and initialize value to 0
 
     int tid;
 
@@ -93,11 +93,7 @@ int main(int argc, char** argv) {
     }
 
     // Simulation has ended: Final see-saw state printed below
-    cout << "Finished with Fred Height: " << fredHeight << " Wilma Height: " << wilmaHeight <<endl;
-
+    cout << "Finished with Fred Height: " << fredHeight << ", Wilma Height: " << wilmaHeight <<endl;
 
     return 0;
-
-
-
 }
